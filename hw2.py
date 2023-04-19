@@ -55,7 +55,12 @@ def DFS(TREE):
 # print(DFS(("A", (("C", (("E",), "D")), "B"))))
 # print(DFS(((("A", ("B",)), ("C",), "D"))))
 
+
 #Problem 3
+def DFID_HELPER(visiting, q, i):
+    for j in visiting[::-1]:
+        q.insert(i,j)
+
 def DFID(TREE, D):
     #the concept right-to-left depth-first iterative-deepening search can be modified from the logic of DFS in the prev 
     #problem. Over here we, instead of popping the firt element, we pop all the element right to left in array and print it in a 
@@ -76,8 +81,7 @@ def DFID(TREE, D):
                 searched.append(visiting)
                 q.insert(i,visiting)   #we have to maintain the position of that element as this is a deepening search
             else:
-                for j in visiting[::-1]:
-                    q.insert(i,j)  #insert the tuple turned list into the same location in q
+                DFID_HELPER(visiting, q,i)  #insert the tuple turned list into the same location in q
         D -= 1 #D denotes the depth of the tree we are . Depth = D(initial value in parameter) - D(current value)
 
     return tuple(searched)
@@ -87,7 +91,7 @@ def DFID(TREE, D):
 
 # print(DFID(((("L", "E"), "F"), "T"), 3))
 # print(DFID(((("A", ("B",)), ("C",), "D")), 3))
-print(DFID(("A", (("C", (("E",), "D")), "B")), 3))
+#assert(DFID(("A", (("C", (("E",), "D")), "B")), 5)) == ('A', 'B', 'A', 'B', 'C', 'A', 'B', 'D', 'C', 'A', 'B', 'D', 'E', 'C', 'A')
 
 
 
@@ -97,7 +101,7 @@ print(DFID(("A", (("C", (("E",), "D")), "B")), 3))
 
 # (homer, baby, dog, poison), where each variable is True if the respective entity is on the west side of the river, and False if it is on the east side.
 def FINAL_STATE(S):
-    return S == (True,True,True,True)
+    return S == (True,True,True,True) #just checking a particular case
 
 def NEXT_STATE(S, A):
     # (homer, baby, dog, poison)
@@ -108,35 +112,40 @@ def NEXT_STATE(S, A):
     elif A == "b":
         homer = not S[0]
         baby = not S[1]
-        return_arr = [(homer,baby,S[2],S[3])]
+        if homer == baby:  #to check that both can move together?
+            return_arr = [(homer,baby,S[2],S[3])]
     elif A == "d":
         homer = not S[0]
         dog = not S[2]
-        return_arr = [(homer,S[1],dog,S[3])]
+        if homer == dog: #homer and dog at same place?
+            return_arr = [(homer,S[1],dog,S[3])]
     elif A == "p":
         homer = not S[0]
         poison = not S[3]
-        return_arr = [(homer,S[1],S[2],poison)]
+        if homer == poison: #homer and poison at same place
+            return_arr = [(homer,S[1],S[2],poison)]
 
     else:
         return []
     
+    if return_arr == []:
+        return [] #if no change
+    
     #the dog and baby, or poisoin and baby are left unsupervised on one side of the river, return [] for invalid state
-    if return_arr[1] == return_arr[2]:
-        if return_arr[1] != return_arr[0] and return_arr[1] != return_arr[3]:
+    if return_arr[0][1] == return_arr[0][2]:
+        if return_arr[0][1] != return_arr[0][0] and return_arr[0][1] != return_arr[0][3]:
             return []
-    if return_arr[1] == return_arr[3]:
-        if return_arr[1] != return_arr[0] and return_arr[1] != return_arr[2]:
+    if return_arr[0][1] == return_arr[0][3]:
+        if return_arr[0][1] != return_arr[0][0] and return_arr[0][1] != return_arr[0][2]:
             return []
+    
     return return_arr
     
 
-# SUCC_FN returns all of the possible legal successor states to the current
-# state. It takes a single argument (S), which encodes the current state, and
-# returns a list of each state that can be reached by applying legal operators
-# to the current state.
 def SUCC_FN(S):
-    possible_moves = []
+    if len(S) == 0:
+        return []
+    possible_moves = []   #resulatant array for all possible ways to move
     if NEXT_STATE(S,"h") != []:
         possible_moves.append(NEXT_STATE(S,"h")[0])
     if NEXT_STATE(S,"b") != []:
@@ -147,47 +156,29 @@ def SUCC_FN(S):
         possible_moves.append(NEXT_STATE(S,"p")[0])
     
     return possible_moves
-# ON_PATH checks whether the current state is on the stack of states visited by
-# this depth-first search. It takes two arguments: the current state (S) and the
-# stack of states visited by DFS (STATES). It returns True if S is a member of
-# STATES and False otherwise.
+
 def ON_PATH(S, STATES):
-    return S in STATES
-# MULT_DFS is a helper function for DFS_SOL. It takes two arguments: 
-# 
-# a list of states from the initial state to the current state (PATH), 
-# and the legal successor states to the last, current state in the PATH (STATES). 
-# PATH is a first-in first-out list of states# that is, the first element is the initial
-# state for the current search and the last element is the most recent state
-# explored. MULT_DFS does a depth-first search on each element of STATES in
-# turn. If any of those searches reaches the final state, MULT_DFS returns the
-# complete path from the initial state to the goal state. Otherwise, it returns
-# [].
+    return S in STATES #just checking in the list
+
 def MULT_DFS(STATES, PATH):
-    #Path holds from initial path to current path
-    if FINAL_STATE(PATH[-1]):
-        return PATH
+    
+    for i in STATES:
+        x = DFS_SOL(i,PATH)
+        if len(x) > 0:  #to check if its not equal to an empty list 
+            return x
+    return []
 
-    #states holds all the possible 
-# DFS_SOL does a depth first search from a given state to the goal state. It
-# takes two arguments: a state (S) and the path from the initial state to S
-# (PATH). If S is the initial state in our search, PATH is set to []. DFS_SOL
-# performs a depth-first search starting at the given state. It returns the path
-# from the initial state to the goal state, if any, or [] otherwise. DFS_SOL is
-# responsible for checking if S is already the goal state, as well as for
-# ensuring that the depth-first search does not revisit a node already on the
-# search path (i.e., S is not on PATH).
+
 def DFS_SOL(S, PATH):
-    if S == (False, False, False, False):
-        PATH = []
     if FINAL_STATE(S):
+        return PATH + [S]  #final result implying a possible path exists
+    if ON_PATH(S,PATH):
+        return []    #negating repetative case
+    return MULT_DFS(SUCC_FN(S),PATH + [S])  #recursing back to MULT_DFS to check for all possible ways to move in the path
 
-    elif S in PATH:
-        
-    #if s is final add to path
-    #if s is alr in path return nothing
-
-
+# print(SUCC_FN((False, False, True, True)))
+#assert(DFS_SOL((False, False, False, False), [])) == [(False, False, False, False), (True, True, False, False), (False, True, False, False), (True, True, True, False), (False, False, True, False), (True, False, True, True), (False, False, True, True), (True, True, True, True)]
+# print(SUCC_FN((True,False,True,True)))
 
 
 
