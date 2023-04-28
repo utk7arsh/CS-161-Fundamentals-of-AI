@@ -1,5 +1,7 @@
 ##############
 # Homework 3 #
+# Name: Utkarsh Lal
+# UID: 905792162
 ##############
 
 
@@ -131,7 +133,9 @@ def cleanUpList(s_list):
 # this function as the goal testing function, A* will never
 # terminate until the whole search space is exhausted.
 def goal_test(s):
-    raise NotImplementedError()
+    #2 means that there is a box that exists which is not at goal which means that the goal state is not reached
+    return not 2 in s
+
 
 
 # EXERCISE: Modify this function to return the list of
@@ -151,26 +155,120 @@ def goal_test(s):
 # A shallow copy (e.g, direcly set s1 = s) constructs a new compound object and then inserts references 
 # into it to the objects found in the original. In this case, any change in the numpy array s1 will also affect
 # the original array s. Thus, you may need a deep copy (e.g, s1 = np.copy(s)) to construct an indepedent array.
+def next_pos(row,col,s1,dir):  #helper function for next_states
+    flag = 1
+    r,c = 0,0
+    if dir == "l":
+        c = -1
+    elif dir == "r":
+        c = 1
+    elif dir == "u":
+        r = -1
+    elif dir == "d":
+        r = 1
+    #the above if conditions modifies the row, col to check for the new pos KEEPER WILL INTEND TO MOVE TO based on the direction
+
+    #if the new position is outside the range of the game, return error case ie 0
+    if row + r < 0 or row + r >= len(s1):
+        return 0
+    
+    if col + c < 0 or col + c >= len(s1[0]):
+        return 0
+    
+    if row + 2*r < 0 or row + 2*r >= len(s1):
+        flag = 0
+    
+    if col + 2*c < 0 or col + 2*c >= len(s1[0]):
+        flag = 0
+
+    #this is to decide the new position of the tile that the keeper leaves after it moves
+    if s1[row][col] == keeper:
+        new_keep = blank
+    elif s1[row][col] == keeperstar:
+        new_keep = star
+    
+    #if the intended tile to move to is blank move
+    if s1[row + r][col + c] == blank:
+        s1[row + r][col + c] = keeper
+        s1[row][col] = new_keep
+        return s1
+    
+    #if intended tile is a goal, switch that tile to keeper + goal
+    if s1[row + r][col + c] == star:
+        s1[row + r][col + c] = keeperstar
+        s1[row][col] = new_keep
+        return s1
+    
+    #if indentend tile is a box, we can only move if the tile next in that direction is either blank or goal
+    if s1[row + r][col + c] == box:
+        if flag:
+            if s1[row + 2*r][col + 2*c] == blank:
+                s1[row + 2*r][col + 2*c] = box
+                s1[row + r][col + c] = keeper
+                s1[row][col] = new_keep
+                return s1
+            elif s1[row + 2*r][col + 2*c] == star:
+                s1[row + 2*r][col + 2*c] = boxstar
+                s1[row + r][col + c] = keeper
+                s1[row][col] = new_keep
+                return s1
+        else:
+            return 0
+    
+    #if indentend tile is a box + goal, we can only move if the tile next in that direction is either blank or goal
+    if s1[row + r][col + c] == boxstar:
+        if flag:
+            if s1[row + 2*r][col + 2*c] == blank:
+                s1[row + 2*r][col + 2*c] = box
+                s1[row + r][col + c] = keeperstar
+                s1[row][col] = new_keep
+                return s1
+            elif s1[row + 2*r][col + 2*c] == star:
+                s1[row + 2*r][col + 2*c] = boxstar
+                s1[row + r][col + c] = keeperstar
+                s1[row][col] = new_keep
+                return s1
+        else:
+            return 0
+                
+    return 0
+                
 def next_states(s):
-    row, col = getKeeperPosition(s)
+    row, col = getKeeperPosition(s) #get r,c
     s_list = []
-    s1 = np.copy(s)
 
-    # NOT IMPLEMENTED YET! YOU NEED TO FINISH THIS FUNCTION.
-
+    for i in ['l','r','u','d']:
+        s1 = np.copy(s) #form a new copy everytime for different directions
+        s_list.append(next_pos(row, col, s1, i))
+    
+    s_list = [x for x in s_list if not isinstance(x, int)]  #the next_pos can either return a numpy array or int 0. this is to clear int 0
+    
+    #this is to test the printing to the next possible states. Can be uncommented to observe
+    # for i in s_list:
+    #     print(i)
+    # for i in s_list:
+    #     printstate(i)
     return cleanUpList(s_list)
 
 
 # EXERCISE: Modify this function to compute the trivial
 # admissible heuristic.
 def h0(s):
-    raise NotImplementedError()
-
+    return 0
 
 # EXERCISE: Modify this function to compute the
 # number of misplaced boxes in state s (numpy array).
+
+# To answer the question, yes h1 is admissible heuristic as we are never overestimating the cost/number of steps required
+# to reach the goal state. It always underestimates or gives the correct cost of steps.
 def h1(s):
-    raise NotImplementedError()
+    count = 0
+    for i in s:
+        for j in i:
+            if j == 2:
+                #j is the root element present in s. if j is 2 that means there is a box which is not at the goal.
+                count += 1
+    return count
 
 
 # EXERCISE: 
@@ -178,7 +276,17 @@ def h1(s):
 # Objective: make A* solve problems as fast as possible.
 
 def h2(s):
-    raise NotImplementedError()
+    r,c = getKeeperPosition(s)
+    count = 0
+
+    #here I am using the concept of distance formula to create a counter variable which can calculate relative distance from every
+    #box to use for admissible heuristic.
+    for i in range(0, len(s)):
+        for j in range(0,len(s[i])):
+            if s[i][j] == box:
+                #distance formula = dist = root((x-a)^2 + (y-b)^2)
+                count += np.sqrt((r - i) ** 2 + (c - j) ** 2)
+    return count
 
 
 # Some predefined problems with initial state s (array). Sokoban function will automatically transform it to numpy
@@ -448,10 +556,7 @@ def printlists(lists):
 
 
 if __name__ == "__main__":
-    sokoban(s1, h0)
-
-    sokoban(s2, h0)
-
-    sokoban(s3, h0)
-
-    sokoban(s4, h0)
+    sokoban(s8, h1)
+    sokoban(s2, h1)
+    sokoban(s3, h2)
+    sokoban(s4, h2)
