@@ -1,0 +1,27 @@
+1. Consider the CNF generated from graph 1 with k = 3 colors (graph1 3.cnf). Is this SAT instance
+satisfiable?
+UNSATISFIABLE
+
+2. Consider the CNF generated from graph 1 with k = 4 colors (graph1 4.cnf). Is this SAT instance
+satisfiable?
+SATISFIABLE 
+
+3. What do the answers of these two SAT instances tell you about the graph coloring problem of the
+above graph? Can you give a solution (a coloring assignment) to the graph coloring problem of graph
+1 based on the results of RSat?
+The graph is 4 colorable and not 3 colorable as per the RSat. This means that there are at least 4 colors
+required to completely color the graph using distinct colors for every connected node. 
+Lets have 4 colors A B C D
+Lets start with node 6 give it color A
+Then go to node 5 give it color B
+Then node 1 give it color C
+Then node 2 give it color B
+Then node 7 give it color D
+Then node 4 give it color D
+Then node 3 give it color C
+As we can see no 2 nodes in a edge have have same coloring. 
+Therefore this is the solution for the graph 1 problem.  
+
+4. Use a similar approach to solve the graph coloring problem of graph 2 in graph2.txt. What is the
+minimum number of colors required to properly color this graph?
+8 colors are required at least to properly color the graph
