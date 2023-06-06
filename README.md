@@ -8,6 +8,10 @@ Given below are my score for respective homeworks.
 | 1             | 98              | 
 | 2             | 96              |
 | 3             | 99              |
+| 4             | 100             |
+| 5             | 96              |
+| 6             | 94              |
+
 
 
 
