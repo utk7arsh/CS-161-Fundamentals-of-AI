@@ -11,6 +11,8 @@ Given below are my score for respective homeworks.
 | 4             | 100             |
 | 5             | 96              |
 | 6             | 94              |
+| 7             | 100             |
+| 8             | 85              |
 
 
 
